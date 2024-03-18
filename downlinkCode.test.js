@@ -6,7 +6,7 @@
  * Copyright (c) 2024 March by Klaasjan Wagenaar, Tristan Bosveld and Richard Kroesen
  */
 
-const { decodeDownlink, TYPE, SensorTypes } = require('./decoder_cayenneLPP_extreme');
+const { decodeUplink, SensorTypes } = require('./decoder_cayenneLPP_extreme');
 
 describe('decodeDownlink', () => {
 
@@ -27,7 +27,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -49,7 +49,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -73,7 +73,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -97,7 +97,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -120,7 +120,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -142,7 +142,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -166,7 +166,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -188,7 +188,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -217,7 +217,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -240,7 +240,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -269,7 +269,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -311,7 +311,7 @@ describe('decodeDownlink', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });

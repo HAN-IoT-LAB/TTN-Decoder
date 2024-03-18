@@ -7,27 +7,33 @@
  */
 
 const SensorTypes = {
-    DIG_IN:     { type: 0, precision: 1, signed: false, bytes: 1 },
-    DIG_OUT:    { type: 1, precision: 1, signed: false, bytes: 1 },
-    ANL_IN:     { type: 2, precision: 100, signed: true, bytes: 2 },
-    ANL_OUT:    { type: 3, precision: 100, signed: true, bytes: 2 },
+    DIG_IN: { type: 0, precision: 1, signed: false, bytes: 1 },
+    DIG_OUT: { type: 1, precision: 1, signed: false, bytes: 1 },
+    ANL_IN: { type: 2, precision: 100, signed: true, bytes: 2 },
+    ANL_OUT: { type: 3, precision: 100, signed: true, bytes: 2 },
     ILLUM_SENS: { type: 101, precision: 1, signed: false, bytes: 2 },
     PRSNC_SENS: { type: 102, precision: 1, signed: false, bytes: 1 },
-    TEMP_SENS:  { type: 103, precision: 10, signed: true, bytes: 2 },
-    HUM_SENS:   { type: 104, precision: 10, signed: false, bytes: 1 },
+    TEMP_SENS: { type: 103, precision: 10, signed: true, bytes: 2 },
+    HUM_SENS: { type: 104, precision: 10, signed: false, bytes: 1 },
     ACCRM_SENS: { type: 113, precision: 1000, signed: true, bytes: 6 },
-    BARO_SENS:  { type: 115, precision: 10, signed: false, bytes: 2 },
-    GYRO_SENS:  { type: 134, precision: 100, signed: true, bytes: 6 },
-    GPS_LOC:    { type: 136, precision: 10000, signed: true, bytes: 12 }
+    BARO_SENS: { type: 115, precision: 10, signed: false, bytes: 2 },
+    GYRO_SENS: { type: 134, precision: 100, signed: true, bytes: 6 },
+    GPS_LOC: { type: 136, precision: 10000, signed: true, bytes: 12 }
 };
 
-function encodeDownlink(input) {
-    return {
-        bytes: [],
-        fPort: 1,
-        warnings: [],
-        errors: []
-    };
+function decodeValue(bytes, i, isSigned, precision, byteLength) {
+    let value = 0;
+    for (let byteIndex = 0; byteIndex < byteLength; byteIndex++) {
+        value = (value << 8) | bytes[i++];
+    }
+    if (isSigned) {
+        const signBitPosition = byteLength * 8 - 1;
+        if (value & (1 << signBitPosition)) {
+            const mask = -1 ^ ((1 << signBitPosition) - 1);
+            value = value | mask;
+        }
+    }
+    return { value: value / precision, index: i };
 }
 
 /**
@@ -44,96 +50,106 @@ function encodeDownlink(input) {
  * @return Object with 'data', 'warnings', and 'errors'. 'Data' maps sensor readings to keys based on sensor 
  * type and channel. 'Warnings' and 'errors' are arrays with respective messages encountered during decoding.
  */
-function decodeDownlink(input) {
+function decodeUplink(input) {
     let bytes = input.bytes;
     let decoded = {};
     for (let i = 0; i < bytes.length;) {
         let type = bytes[i++];
         let channel = bytes[i++];
-
-        function decodeValue(isSigned, precision, byteLength) {
-            let value = 0;
-            for (let byteIndex = 0; byteIndex < byteLength; byteIndex++) {
-                value = (value << 8) | bytes[i++];
-            }
-            if (isSigned) {
-                const signBitPosition = byteLength * 8 - 1;
-                // Check if the sign bit is set
-                if (value & (1 << signBitPosition)) {
-                    // Perform sign extension
-                    const mask = -1 ^ ((1 << signBitPosition) - 1);
-                    value = value | mask;
-                }
-            }
-            return value / precision;
-        }
+        let decodeResult;
 
         switch (type) {
             case SensorTypes.DIG_IN.type:
-                decoded['digital_' + channel] = decodeValue(SensorTypes.DIG_IN.signed, 
-                    SensorTypes.DIG_IN.precision, 
-                    SensorTypes.DIG_IN.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.DIG_IN.signed,
+                    SensorTypes.DIG_IN.precision, SensorTypes.DIG_IN.bytes);
+                i = decodeResult.index;
+                decoded['digital_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.DIG_OUT.type:
-                decoded['digital_' + channel] = decodeValue(SensorTypes.DIG_OUT.signed, 
-                    SensorTypes.DIG_OUT.precision, 
-                    SensorTypes.DIG_OUT.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.DIG_OUT.signed,
+                    SensorTypes.DIG_OUT.precision, SensorTypes.DIG_OUT.bytes);
+                i = decodeResult.index; // Update index
+                decoded['digital_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.ANL_IN.type:
-                decoded['analog_' + channel] = decodeValue(SensorTypes.ANL_IN.signed, 
-                    SensorTypes.ANL_IN.precision, 
-                    SensorTypes.ANL_IN.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.ANL_IN.signed,
+                    SensorTypes.ANL_IN.precision, SensorTypes.ANL_IN.bytes);
+                i = decodeResult.index;
+                decoded['analog_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.ANL_OUT.type:
-                decoded['analog_' + channel] = decodeValue(SensorTypes.ANL_OUT.signed, 
-                    SensorTypes.ANL_OUT.precision, 
-                    SensorTypes.ANL_OUT.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.ANL_OUT.signed,
+                    SensorTypes.ANL_OUT.precision, SensorTypes.ANL_OUT.bytes);
+                i = decodeResult.index;
+                decoded['analog_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.ILLUM_SENS.type:
-                decoded['illumination_' + channel] = decodeValue(SensorTypes.ILLUM_SENS.signed, 
-                    SensorTypes.ILLUM_SENS.precision, 
-                    SensorTypes.ILLUM_SENS.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.ILLUM_SENS.signed,
+                    SensorTypes.ILLUM_SENS.precision, SensorTypes.ILLUM_SENS.bytes);
+                i = decodeResult.index;
+                decoded['illumination_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.PRSNC_SENS.type:
-                decoded['presence_' + channel] = decodeValue(SensorTypes.PRSNC_SENS.signed, 
-                    SensorTypes.PRSNC_SENS.precision, 
-                    SensorTypes.PRSNC_SENS.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.PRSNC_SENS.signed,
+                    SensorTypes.PRSNC_SENS.precision, SensorTypes.PRSNC_SENS.bytes);
+                i = decodeResult.index;
+                decoded['presence_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.TEMP_SENS.type:
-                decoded['temperature_' + channel] = decodeValue(SensorTypes.TEMP_SENS.signed, 
-                    SensorTypes.TEMP_SENS.precision, 
-                    SensorTypes.TEMP_SENS.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.TEMP_SENS.signed,
+                    SensorTypes.TEMP_SENS.precision, SensorTypes.TEMP_SENS.bytes);
+                i = decodeResult.index;
+                decoded['temperature_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.HUM_SENS.type:
-                decoded['humidity_' + channel] = decodeValue(SensorTypes.HUM_SENS.signed, 
-                    SensorTypes.HUM_SENS.precision, 
-                    SensorTypes.HUM_SENS.bytes);
+                decodeResult = decodeValue(bytes, i, SensorTypes.HUM_SENS.signed,
+                    SensorTypes.HUM_SENS.precision, SensorTypes.HUM_SENS.bytes);
+                i = decodeResult.index;
+                decoded['humidity_' + channel] = decodeResult.value;
                 break;
             case SensorTypes.ACCRM_SENS.type:
+                let accDecodeX = decodeValue(bytes, i, SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes / 3);
+                i = accDecodeX.index;
+                let accDecodeY = decodeValue(bytes, i, SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes / 3);
+                i = accDecodeY.index;
+                let accDecodeZ = decodeValue(bytes, i, SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes / 3);
+                i = accDecodeZ.index;
                 decoded['accelerometer_' + channel] = {
-                    x: decodeValue(SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes/3),
-                    y: decodeValue(SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes/3),
-                    z: decodeValue(SensorTypes.ACCRM_SENS.signed, SensorTypes.ACCRM_SENS.precision, SensorTypes.ACCRM_SENS.bytes/3)
+                    x: accDecodeX.value,
+                    y: accDecodeY.value,
+                    z: accDecodeZ.value
                 };
                 break;
             case SensorTypes.BARO_SENS.type:
-                decoded['barometer_' + channel] = decodeValue(SensorTypes.BARO_SENS.signed, 
-                    SensorTypes.BARO_SENS.precision, 
-                    SensorTypes.BARO_SENS.bytes);
+                let baroDecode = decodeValue(bytes, i, SensorTypes.BARO_SENS.signed, SensorTypes.BARO_SENS.precision, SensorTypes.BARO_SENS.bytes);
+                i = baroDecode.index;
+                decoded['barometer_' + channel] = baroDecode.value;
                 break;
+
             case SensorTypes.GYRO_SENS.type:
+                let gyroDecodeX = decodeValue(bytes, i, SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes / 3);
+                i = gyroDecodeX.index;
+                let gyroDecodeY = decodeValue(bytes, i, SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes / 3);
+                i = gyroDecodeY.index;
+                let gyroDecodeZ = decodeValue(bytes, i, SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes / 3);
+                i = gyroDecodeZ.index;
                 decoded['gyroscope_' + channel] = {
-                    x: decodeValue(SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes/3),
-                    y: decodeValue(SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes/3),
-                    z: decodeValue(SensorTypes.GYRO_SENS.signed, SensorTypes.GYRO_SENS.precision, SensorTypes.GYRO_SENS.bytes/3)
+                    x: gyroDecodeX.value,
+                    y: gyroDecodeY.value,
+                    z: gyroDecodeZ.value
                 };
                 break;
             case SensorTypes.GPS_LOC.type:
+                let gpsDecodeX = decodeValue(bytes, i, SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision, SensorTypes.GPS_LOC.bytes / 3);
+                i = gpsDecodeX.index;
+                let gpsDecodeY = decodeValue(bytes, i, SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision, SensorTypes.GPS_LOC.bytes / 3);
+                i = gpsDecodeY.index;
+                let gpsDecodeZ = decodeValue(bytes, i, SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision / 100, SensorTypes.GPS_LOC.bytes / 3);
+                i = gpsDecodeZ.index;
                 decoded['gps_' + channel] = {
-                    x: decodeValue(SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision, SensorTypes.GPS_LOC.bytes/3),
-                    y: decodeValue(SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision, SensorTypes.GPS_LOC.bytes/3),
-                    z: decodeValue(SensorTypes.GPS_LOC.signed, 
-                        (SensorTypes.GPS_LOC.precision /100), SensorTypes.GPS_LOC.bytes/3)
+                    lat: gpsDecodeX.value,
+                    long: gpsDecodeY.value,
+                    alt: gpsDecodeZ.value
                 };
                 break;
             default: // Unknown data type
@@ -149,4 +165,4 @@ function decodeDownlink(input) {
     };
 }
 
-module.exports = { SensorTypes, encodeDownlink, decodeDownlink };
+module.exports = { SensorTypes, decodeUplink };

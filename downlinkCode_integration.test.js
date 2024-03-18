@@ -6,7 +6,7 @@
  * Copyright (c) 2024 March by Klaasjan Wagenaar, Tristan Bosveld and Richard Kroesen
  */
 
-const { decodeDownlink, TYPE, SensorTypes } = require('./decoder_cayenneLPP_extreme');
+const { decodeUplink, SensorTypes } = require('./decoder_cayenneLPP_extreme');
 
 describe('Decode Downlink with Multiple Sensor Types', () => {
     it('correctly decodes a mix of sensor types', () => {
@@ -45,7 +45,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
             errors: []
         };
 
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
 
         expect(result).toEqual(expected);
     });
@@ -84,7 +84,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
             errors: []
         };
     
-        const result = decodeDownlink(input);
+        const result = decodeUplink(input);
     
         expect(result).toEqual(expected);
     });
