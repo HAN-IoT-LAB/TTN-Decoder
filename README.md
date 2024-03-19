@@ -101,7 +101,7 @@ If Jest package is installed the test can be run by performin the following comm
 npm test
 ```
 
-## 4 License
+## 5 License
 The TheThingsNetwork decoder is free: You can redistribute it and/or modify it under the terms of a Creative Commons Attribution-NonCommercial 4.0 International License (http://creativecommons.org/licenses/by-nc/4.0/) by Richard Kroesen, Klaasjan Wagenaar and Tristan Bosveld.
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.
