@@ -14,7 +14,7 @@ const SensorTypes = {
     ILLUM_SENS: { type: 101, precision: 1, signed: false, bytes: 2 },
     PRSNC_SENS: { type: 102, precision: 1, signed: false, bytes: 1 },
     TEMP_SENS: { type: 103, precision: 10, signed: true, bytes: 2 },
-    HUM_SENS: { type: 104, precision: 10, signed: false, bytes: 1 },
+    HUM_SENS: { type: 104, precision: 10, signed: false, bytes: 2 },
     ACCRM_SENS: { type: 113, precision: 1000, signed: true, bytes: 6 },
     BARO_SENS: { type: 115, precision: 10, signed: false, bytes: 2 },
     GYRO_SENS: { type: 134, precision: 100, signed: true, bytes: 6 },
@@ -23,15 +23,14 @@ const SensorTypes = {
 
 function decodeValue(bytes, i, isSigned, precision, byteLength) {
     let value = 0;
-    for (let byteIndex = 0; byteIndex < byteLength; byteIndex++) {
-        value = (value << 8) | bytes[i++];
+    for (let byteIndex = byteLength - 1; byteIndex >= 0; byteIndex--) {
+        value = (value << 8) | bytes[i+byteIndex];
     }
-    if (isSigned) {
-        const signBitPosition = byteLength * 8 - 1;
-        if (value & (1 << signBitPosition)) {
-            const mask = -1 ^ ((1 << signBitPosition) - 1);
-            value = value | mask;
-        }
+    i += byteLength;
+
+    if (isSigned && (value & (1 << (8 * byteLength - 1)))) {
+  
+        value = value - (1 << (8 * byteLength));
     }
     return { value: value / precision, index: i };
 }
@@ -147,9 +146,9 @@ function decodeUplink(input) {
                 let gpsDecodeZ = decodeValue(bytes, i, SensorTypes.GPS_LOC.signed, SensorTypes.GPS_LOC.precision / 100, SensorTypes.GPS_LOC.bytes / 3);
                 i = gpsDecodeZ.index;
                 decoded['gps_' + channel] = {
-                    lat: gpsDecodeX.value,
-                    long: gpsDecodeY.value,
-                    alt: gpsDecodeZ.value
+                    x: gpsDecodeX.value,
+                    y: gpsDecodeY.value,
+                    z: gpsDecodeZ.value
                 };
                 break;
             default: // Unknown data type

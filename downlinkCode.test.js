@@ -61,8 +61,8 @@ describe('decodeDownlink', () => {
                 SensorTypes.ANL_IN.type, 
                 1,  // Channel
                 /* Decimal value of 2,68 represented: */
-                1,  // MSB
-                12  // LSB
+                12,  // LSB
+                1    // MSB
             ]
         };
         const expected = {
@@ -85,8 +85,8 @@ describe('decodeDownlink', () => {
                 SensorTypes.ANL_IN.type, 
                 1,  // Channel
                 /* Decimal value of -12 represented as two's complement: */
-                255,    // MSB
-                244     // LSB
+                244,
+                255 
             ]
         };
         const expected = {
@@ -108,8 +108,8 @@ describe('decodeDownlink', () => {
             bytes: [
                 SensorTypes.ILLUM_SENS.type, 
                 1,  // Channel
+                100, // LSB
                 0,  // MSB
-                100 // LSB
             ]
         };
         const expected = {
@@ -153,8 +153,8 @@ describe('decodeDownlink', () => {
             bytes: [
                 SensorTypes.TEMP_SENS.type, 
                 3,       // Channel
-                255,     // MSB (-1 if interpreted as signed)
-                244      // LSB (244), represents -12 in 2's complement with 0.1°C precision
+                244,      // LSB (244), represents -12 in 2's complement with 0.1°C precision
+                255,        // MSB (-1 if interpreted as signed)
             ]
         };
         const expectedValue = -1.2;
@@ -200,9 +200,9 @@ describe('decodeDownlink', () => {
                 SensorTypes.ACCRM_SENS.type,
                 1,  // Channel
                 // Assuming 2 bytes per axis, with a total of 6 bytes for x, y, z
-                0, 1, // X-axis
-                0, 2, // Y-axis
-                0, 3  // Z-axis
+                1, 0, // X-axis
+                2, 0, // Y-axis
+                3, 0  // Z-axis
             ]
         };
         const expected = {
@@ -228,8 +228,8 @@ describe('decodeDownlink', () => {
             bytes: [
                 SensorTypes.BARO_SENS.type,
                 1,   // Channel
+                144,  // LSB, example value
                 1,   // MSB
-                144  // LSB, example value
             ]
         };
         const expected = {
@@ -252,9 +252,9 @@ describe('decodeDownlink', () => {
                 SensorTypes.GYRO_SENS.type,
                 1,  // Channel
                 // Example gyro data for x, y, z axes
-                0, 100, // X-axis
-                0, 150, // Y-axis
-                0, 200  // Z-axis
+                100, 0, // X-axis
+                150, 0, // Y-axis
+                200, 0  // Z-axis
             ]
         };
         const expected = {
@@ -278,12 +278,11 @@ describe('decodeDownlink', () => {
     it('correctly decodes GPS_LOC sensor data', () => {
         
         function int32ToBytes(value) {
-            // Converts a 32-bit integer into an array of 4 bytes
             return [
-                (value >> 24) & 0xFF,
-                (value >> 16) & 0xFF,
+                value & 0xFF,
                 (value >> 8) & 0xFF,
-                value & 0xFF
+                (value >> 16) & 0xFF,
+                (value >> 24) & 0xFF
             ];
         }
 
@@ -303,7 +302,7 @@ describe('decodeDownlink', () => {
             data: {
                 gps_6: { // Assuming channel 6 for GPS
                     x: 515074/LAT_LON_PRECISION,  // Latitude
-                    y: -1278/LAT_LON_PRECISION,  // Longitude
+                    y: -1279/LAT_LON_PRECISION,  // Longitude
                     z: 3000/ALTITUDE_PRECISION    // Altitude
                 }
             },
