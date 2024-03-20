@@ -13,6 +13,7 @@ describe('decodeDownlink', () => {
     /* TEST #1 for DIG_IN */
     it('correctly decodes DIG_IN sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.DIG_IN.type,
                 5,  // Channel
@@ -20,6 +21,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 digital_5: 0
             },
@@ -35,6 +37,7 @@ describe('decodeDownlink', () => {
     /* TEST #2 for DIG_OUT */
     it('correctly decodes DIG_OUT sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.DIG_OUT.type, // Assuming SensorTypes is structured as shown previously
                 2,  // Channel
@@ -42,6 +45,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 digital_2: 1
             },
@@ -57,6 +61,7 @@ describe('decodeDownlink', () => {
     /* TEST #3  */
     it('correctly decodes ANL_IN sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.ANL_IN.type, 
                 1,  // Channel
@@ -66,6 +71,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 analog_1: 2.68
             },
@@ -81,6 +87,7 @@ describe('decodeDownlink', () => {
     /* TEST #4 Negative Values */
     it('correctly decodes ANL_IN sensor negative data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.ANL_IN.type, 
                 1,  // Channel
@@ -90,6 +97,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 analog_1: -0.12
             },
@@ -105,6 +113,7 @@ describe('decodeDownlink', () => {
     /* Test #5 for ILLUM_SENS sensor data */
     it('correctly decodes ILLUM_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.ILLUM_SENS.type, 
                 1,  // Channel
@@ -113,6 +122,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 illumination_1: 100
             },
@@ -128,6 +138,7 @@ describe('decodeDownlink', () => {
     /* Test #6 for PRSNC_SENS sensor data */
     it('correctly decodes PRSNC_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.PRSNC_SENS.type, 
                 2,  // Channel
@@ -135,6 +146,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 presence_2: 1
             },
@@ -150,6 +162,7 @@ describe('decodeDownlink', () => {
     /* Test #7 for TEMP_SENS sensor data (negative value) */
     it('correctly decodes TEMP_SENS sensor negative data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.TEMP_SENS.type, 
                 3,       // Channel
@@ -158,7 +171,9 @@ describe('decodeDownlink', () => {
             ]
         };
         const expectedValue = -1.2;
+
         const expected = {
+            decoder_version: 1,
             data: {
                 temperature_3: expectedValue
             },
@@ -174,6 +189,7 @@ describe('decodeDownlink', () => {
     /* Test #8 for HUM_SENS sensor data */
     it('correctly decodes HUM_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.HUM_SENS.type,
                 1,  // Channel
@@ -181,6 +197,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 humidity_1: 5.0
             },
@@ -196,6 +213,7 @@ describe('decodeDownlink', () => {
     /* Test #9 for ACCRM_SENS sensor data */
     it('correctly decodes ACCRM_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.ACCRM_SENS.type,
                 1,  // Channel
@@ -206,6 +224,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 accelerometer_1: {
                     x: 1 / SensorTypes.ACCRM_SENS.precision,
@@ -225,6 +244,7 @@ describe('decodeDownlink', () => {
     /* Test #10 for BARO_SENS sensor data */
     it('correctly decodes BARO_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.BARO_SENS.type,
                 1,   // Channel
@@ -233,6 +253,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 barometer_1: ((1 << 8) + 144) / SensorTypes.BARO_SENS.precision // Assuming 0.1 hPa precision
             },
@@ -248,6 +269,7 @@ describe('decodeDownlink', () => {
     /* Test #11 for GYRO_SENS sensor data */
     it('correctly decodes GYRO_SENS sensor data', () => {
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.GYRO_SENS.type,
                 1,  // Channel
@@ -258,6 +280,7 @@ describe('decodeDownlink', () => {
             ]
         };
         const expected = {
+            decoder_version: 1,
             data: {
                 gyroscope_1: {
                     x: 100 / SensorTypes.GYRO_SENS.precision,
@@ -289,6 +312,7 @@ describe('decodeDownlink', () => {
         const LAT_LON_PRECISION = 10000;
         const ALTITUDE_PRECISION = 100; 
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.GPS_LOC.type,
                 6,
@@ -299,6 +323,7 @@ describe('decodeDownlink', () => {
         };
 
         const expected = {
+            decoder_version: 1,
             data: {
                 gps_6: { // Assuming channel 6 for GPS
                     x: 515074/LAT_LON_PRECISION,  // Latitude

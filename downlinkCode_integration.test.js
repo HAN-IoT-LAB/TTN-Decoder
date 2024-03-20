@@ -20,6 +20,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
         }
 
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.DIG_IN.type, 1, 1, // DIG_IN, channel 1, value 1 (digital input ON)
                 SensorTypes.TEMP_SENS.type, 2, 0x2C, 0x01, // TEMP_SENS, channel 2, value 300 (30.0°C after division)
@@ -31,6 +32,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
         };
 
         const expected = {
+            decoder_version: 1,
             data: {
                 digital_1: 1, // Digital input ON
                 temperature_2: 30.0, // 30.0°C
@@ -60,6 +62,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
         }
     
         const input = {
+            fPort: 1,
             bytes: [
                 SensorTypes.DIG_IN.type, 1, 1, // DIG_IN, channel 1, value 1 (digital input ON)
                 SensorTypes.TEMP_SENS.type, 2, 0x2C,0x01, // TEMP_SENS, channel 2, value 300 (30.0°C after division)
@@ -73,6 +76,7 @@ describe('Decode Downlink with Multiple Sensor Types', () => {
     
         // Adjusting expectations to include errors
         const expected = {
+            decoder_version: 1,
             data: {
                 "digital_1": 1,
                 errors: ["Unknown type: 200"],

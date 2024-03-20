@@ -6,6 +6,16 @@
  * Copyright (c) 2024 March by Klaasjan Wagenaar, Tristan Bosveld and Richard Kroesen
  */
 
+/**
+ * @brief Definitions for sensor types used in IoT device data decoding.
+ *
+ * This file contains the `SensorTypes` constant, which is a mapping of various sensor types
+ * to their respective characteristics. Each sensor type is an object with the following properties:
+ * - `type`: Numeric identifier for the sensor type.
+ * - `precision`: The factor by which the raw sensor data is divided to obtain a meaningful value.
+ * - `signed`: Boolean indicating if the sensor data is signed (true) or unsigned (false).
+ * - `bytes`: The number of bytes that represent the sensor's data in the transmission.
+ */
 const SensorTypes = {
     DIG_IN: { type: 0, precision: 1, signed: false, bytes: 1 },
     DIG_OUT: { type: 1, precision: 1, signed: false, bytes: 1 },
@@ -21,37 +31,106 @@ const SensorTypes = {
     GPS_LOC: { type: 136, precision: 10000, signed: true, bytes: 12 }
 };
 
+/**
+* @SensorTypes Reference Table:
+*
+* | Sensor Name | LPP  | IPSO   | Decimal Precision  | Signed | Size Bytes   |
+* |-------------|------|--------|--------------------|--------|--------------|
+* | DIG_IN      | 0    | 3200   |  1                 | false  | 1            |
+* | DIG_OUT     | 1    | 3201   |  1                 | false  | 1            |
+* | ANL_IN      | 2    | 3202   |  100               | true   | 2            |
+* | ANL_OUT     | 3    | 3203   |  100               | true   | 2            |
+* | ILLUM_SENS  | 101  | 3301   |  1                 | false  | 2            |
+* | PRSNC_SENS  | 102  | 3302   |  1                 | false  | 1            |
+* | TEMP_SENS   | 103  | 3303   |  10                | true   | 2            |
+* | HUM_SENS    | 104  | 3304   |  10                | false  | 2            |
+* | ACCRM_SENS  | 113  | 3313   |  1000              | true   | 6            |
+* | BARO_SENS   | 115  | 3315   |  10                | false  | 2            |
+* | GYRO_SENS   | 134  | 3334   |  100               | true   | 6            |
+* | GPS_LOC     | 136  | 3336   |  10000             | true   | 12           |
+*/
+
+/**
+ * @brief Decodes the uplink data payload based on the specified payload version.
+ *
+ * This function decodes the input payload by examining the payload version. For encoding version 1.
+ *
+ * @param input A structure containing the payload to be decoded.
+ * @return Returns an object containing the decoded data, the version of the coding used, 
+ *         and arrays for warnings and errors. The returned object has the following structure:
+ *         {
+ *           decoder_version: <version>,    // Integer representing the payload version
+ *           data: <decoded_data>,          // Object containing the decoded payload
+ *           warnings: <warnings_array>,    // Array of strings representing any warnings
+ *           errors: <errors_array>,        // Array of strings representing any errors encountered
+ *         }
+ */
+function decodeUplink(input) {
+    let bytes = input.bytes;
+    let payload_version = input.fPort;
+    let decoded = {};
+
+
+    if (payload_version == 1) { 
+        decoded = processPayloadVersion_ONE(bytes, decoded);
+    } else {
+        decoded.errors = ["Payload Version not supported: " + payload_version];
+    }
+
+    return {
+        decoder_version: payload_version,
+        data: decoded,
+        warnings: [],
+        errors: [],
+    };
+}
+
+/**
+ * @brief Decodes a value from a byte array based on the specified parameters.
+ *
+ * This function extracts a value starting from index `i` in the `bytes` array, interpreting
+ * a sequence of `byteLength` bytes according to whether the value is signed or unsigned,
+ * and then adjusting it by a given `precision`.
+ *
+ * @param bytes The array of bytes from which the value is to be extracted.
+ * @param i The starting index in the `bytes` array from which to begin decoding the value.
+ * @param isSigned A boolean indicating whether the value to be decoded is signed (true) or unsigned (false).
+ * @param precision The factor by which the raw decoded value should be divided to obtain the final value.
+ *                  This allows for the representation of fractional values without using floating point numbers
+ *                  in the encoded data.
+ * @param byteLength The number of bytes that make up the value to be decoded.
+ *
+ * @return An object containing two properties: `value` and `index`. `value` is the decoded number adjusted
+ *         by the `precision`, and `index` is the new index in the `bytes` array after decoding the value,
+ *         which can be used for subsequent decoding operations.
+ */
 function decodeValue(bytes, i, isSigned, precision, byteLength) {
     let value = 0;
     for (let byteIndex = byteLength - 1; byteIndex >= 0; byteIndex--) {
         value = (value << 8) | bytes[i+byteIndex];
     }
+
     i += byteLength;
 
     if (isSigned && (value & (1 << (8 * byteLength - 1)))) {
-  
         value = value - (1 << (8 * byteLength));
     }
     return { value: value / precision, index: i };
 }
 
 /**
- * @brief Decodes downlink data from a byte array based on predefined sensor types.
- * 
- * This function iterates through a given array of bytes, decoding each segment according to the 
- * sensor type and channel specified. It utilizes a nested `decodeValue` function to handle the 
- * conversion of byte segments into their corresponding sensor values, considering the signedness, 
- * precision, and byte length for each sensor type. 
- * 
- * @param input Object with a 'bytes' array of encoded sensor data. Each segment includes a sensor type 
- * identifier, channel number, and data bytes.
- * 
- * @return Object with 'data', 'warnings', and 'errors'. 'Data' maps sensor readings to keys based on sensor 
- * type and channel. 'Warnings' and 'errors' are arrays with respective messages encountered during decoding.
+ * @brief Processes and decodes payload version 1.
+ *
+ * This function iterates through the bytes of the payload, decoding each segment according to the sensor type
+ * it represents. The decoded values are then added to the `decoded` object with keys
+ * representing the sensor type and channel.
+ *
+ * @param bytes An array of bytes representing the payload to be decoded.
+ * @param decoded An initially empty object that will be populated with the decoded sensor values.
+ * @return Returns the `decoded` object populated with keys and values representing the decoded sensor data.
+ *     
  */
-function decodeUplink(input) {
-    let bytes = input.bytes;
-    let decoded = {};
+function processPayloadVersion_ONE(bytes, decoded) {
     for (let i = 0; i < bytes.length;) {
         let type = bytes[i++];
         let channel = bytes[i++];
@@ -157,11 +236,7 @@ function decodeUplink(input) {
                 break;
         }
     }
-    return {
-        data: decoded,
-        warnings: [],
-        errors: []
-    };
+    return decoded;
 }
 
 module.exports = { SensorTypes, decodeUplink };
